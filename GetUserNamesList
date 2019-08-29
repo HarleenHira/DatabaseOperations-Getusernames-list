@@ -1,0 +1,40 @@
+public static IList<string> GetUserNamesList(string tableName, string productType)
+        {
+            string connectionstring = string.Empty;
+            if (_IsRunOnVNext)
+            {
+                connectionstring = ConfigurationManager.AppSettings["PortalAutomationConnectionString"];
+            }
+            else
+            {
+                connectionstring = ConfigurationManager.AppSettings["LocalConnectionString"];
+            }
+            string query = string.Empty;
+            if (ConfigurationManager.AppSettings["TableName"].ToString().Equals("[PortalAutomation].[dbo].[PortalLogin]"))
+            {
+                query = string.Format("Select Username from {0} where ProductType = '{1}' AND Role='PortalAdmin'", tableName, productType);
+            }
+            DataTable DataTable = new DataTable();
+            try
+            {
+                using (SqlConnection Conn = new SqlConnection(connectionstring))
+                {
+                    Conn.Open();
+                    SqlCommand Cmd = new SqlCommand(query, Conn);
+                    SqlDataAdapter da = new SqlDataAdapter(Cmd);
+                    da.Fill(DataTable);
+                }
+                IList<string> UserNames = new List<string>();
+                UserNames.Add(DataTable.Rows[0]["Username"].ToString());
+                UserNames.Add(DataTable.Rows[1]["Username"].ToString());
+                return UserNames;
+            }
+
+            catch (Exception ex)
+            {
+                Log.Error("with Exception message : " + ex.Message);
+                Log.Error("with StackTrace : " + ex.StackTrace);
+                throw new AssertFailedException("Failed to User deatils for the User Name from Database");
+            }
+
+        }
